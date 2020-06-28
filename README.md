@@ -1,6 +1,6 @@
 ## Linformer for Pytorch
 
-An implementation of the simple Linformer self-attention layer for Pytorch. Linformer comes with two deficiencies. (1) It does not work for the auto-regressive case. (2) Assumes a fixed sequence length. However, if benchmarks show it to perform well enough, it will be added to <a href="https://github.com/lucidrains/linear-attention-transformer">this repository</a> as a self-attention layer to be used in the encoder.
+An implementation of Linformer in Pytorch. Linformer comes with two deficiencies. (1) It does not work for the auto-regressive case. (2) Assumes a fixed sequence length. However, if benchmarks show it to perform well enough, it will be added to <a href="https://github.com/lucidrains/linear-attention-transformer">this repository</a> as a self-attention layer to be used in the encoder.
 
 ## Install
 
@@ -28,7 +28,7 @@ model = LinformerLM(
 )
 
 x = torch.randint(0, 20000, (1, 4096))
-model(x) # (1, 4096, 512)
+model(x) # (1, 4096, 20000)
 ```
 
 Linformer
@@ -71,6 +71,7 @@ attn(x) # (1, 4096, 512)
 ```
 
 Self-Attention layer above receiving contextual keys
+The contextual key sequence length must be equal to the sequence length given to the constructor
 
 ```python
 import torch
