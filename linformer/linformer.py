@@ -1,6 +1,17 @@
+import math
 import torch
 from torch import nn
 import torch.nn.functional as F
+
+# helper functions
+
+def init_(tensor):
+    dim = tensor.shape[-1]
+    std = 1 / math.sqrt(dim)
+    tensor.uniform_(-std, std)
+    return tensor
+
+# helper classes
 
 class Residual(nn.Module):
     def __init__(self, fn):
@@ -30,7 +41,7 @@ class FeedForward(nn.Module):
         return self.net(x)
 
 class LinformerSelfAttention(nn.Module):
-    def __init__(self, dim, seq_len, k = 256, heads = 8, one_kv_head = False, share_kv = False):
+    def __init__(self, dim, seq_len, k = 256, heads = 8, one_kv_head = False, share_kv = False, dropout = 0.):
         super().__init__()
         assert (dim % heads) == 0, 'dimension must be divisible by the number of heads'
 
@@ -44,12 +55,14 @@ class LinformerSelfAttention(nn.Module):
 
         kv_dim = self.dim_head if one_kv_head else dim
         self.to_k = nn.Linear(dim, kv_dim, bias = False)
-        self.proj_k = nn.Parameter(torch.randn(seq_len, k))
+        self.proj_k = nn.Parameter(init_(torch.zeros(seq_len, k)))
 
         self.share_kv = share_kv
         if not share_kv:
             self.to_v = nn.Linear(dim, kv_dim, bias = False)
-            self.proj_v = nn.Parameter(torch.randn(seq_len, k))
+            self.proj_v = nn.Parameter(init_(torch.zeros(seq_len, k)))
+
+        self.dropout = nn.Dropout(dropout)
 
     def forward(self, x, context = None, **kwargs):
         b, n, d, d_h, h, k = *x.shape, self.dim_head, self.heads, self.k
@@ -81,8 +94,9 @@ class LinformerSelfAttention(nn.Module):
 
         # attention
 
-        dots = torch.einsum('bhnd,bhkd->bhnk', queries, keys)
+        dots = torch.einsum('bhnd,bhkd->bhnk', queries, keys) * (d_h ** -0.5)
         attn = dots.softmax(dim=-1)
+        attn = self.dropout(attn)
         attn = torch.einsum('bhnk,bhkd->bhnd', attn, values)
 
         # split heads
