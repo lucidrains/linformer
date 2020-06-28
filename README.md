@@ -26,7 +26,7 @@ model = LinformerLM(
     heads = 8,
     k = 256,               # this is the k that the key/values are projected to along the sequence dimension
     one_kv_head = True,    # share one key/value head across all heads
-    share_kv = False       # share the same projectoin for keys and values
+    share_kv = False       # share the same projection for keys and values
 )
 
 x = torch.randint(0, 20000, (1, 4096))
