@@ -51,7 +51,7 @@ class LinformerSelfAttention(nn.Module):
             self.to_v = nn.Linear(dim, kv_dim, bias = False)
             self.proj_v = nn.Parameter(torch.randn(seq_len, k))
 
-    def forward(self, x, context = None):
+    def forward(self, x, context = None, **kwargs):
         b, n, d, d_h, h, k = *x.shape, self.dim_head, self.heads, self.k
 
         kv_len = n if context is None else context.shape[1] 
