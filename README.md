@@ -14,7 +14,7 @@ Linformer language model
 
 ```python
 import torch
-from linformer_pytorch import LinformerLM
+from linformer import LinformerLM
 
 model = LinformerLM(
     num_tokens = 20000,
@@ -35,7 +35,7 @@ Linformer
 
 ```python
 import torch
-from linformer_pytorch import Linformer
+from linformer import Linformer
 
 model = Linformer(
     dim = 512,
@@ -55,7 +55,7 @@ Single Self-Attention layer
 
 ```python
 import torch
-from linformer_pytorch import LinformerSelfAttention
+from linformer import LinformerSelfAttention
 
 attn = LinformerSelfAttention(
     dim = 512,
