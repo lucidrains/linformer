@@ -17,14 +17,14 @@ import torch
 from linformer_pytorch import LinformerLM
 
 model = LinformerLM(
-	num_tokens = 20000,
-	dim = 512,
-	seq_len = 4096,
-	depth = 12,
-	heads = 8,
-	k = 256,               # this is the k that the key/values are projected to along the sequence dimension
-	one_kv_head = True,    # share one key/value head across all heads
-	share_kv = False	   # share the same projectoin for keys and values
+    num_tokens = 20000,
+    dim = 512,
+    seq_len = 4096,
+    depth = 12,
+    heads = 8,
+    k = 256,               # this is the k that the key/values are projected to along the sequence dimension
+    one_kv_head = True,    # share one key/value head across all heads
+    share_kv = False       # share the same projectoin for keys and values
 )
 
 x = torch.randint(0, 20000, (1, 4096))
@@ -38,13 +38,13 @@ import torch
 from linformer_pytorch import Linformer
 
 model = Linformer(
-	dim = 512,
-	seq_len = 4096,
-	depth = 12,
-	heads = 8,
-	k = 256,
-	one_kv_head = True,
-	share_kv = True
+    dim = 512,
+    seq_len = 4096,
+    depth = 12,
+    heads = 8,
+    k = 256,
+    one_kv_head = True,
+    share_kv = True
 )
 
 x = torch.randn(1, 4096, 512)
@@ -58,12 +58,12 @@ import torch
 from linformer_pytorch import LinformerSelfAttention
 
 attn = LinformerSelfAttention(
-	dim = 512,
-	seq_len = 4096,
-	heads = 8,
-	k = 256,
-	one_kv_head = True,
-	share_kv = True
+    dim = 512,
+    seq_len = 4096,
+    heads = 8,
+    k = 256,
+    one_kv_head = True,
+    share_kv = True
 )
 
 x = torch.randn(1, 4096, 512)
@@ -77,12 +77,12 @@ import torch
 from linformer_pytorch import LinformerSelfAttention
 
 attn = LinformerSelfAttention(
-	dim = 512,
-	seq_len = 8192,
-	heads = 8,
-	k = 256,
-	one_kv_head = True,
-	share_kv = True
+    dim = 512,
+    seq_len = 8192,
+    heads = 8,
+    k = 256,
+    one_kv_head = True,
+    share_kv = True
 )
 
 x = torch.randn(1, 2048, 512)
