@@ -1,1 +1,1 @@
-from linformer_pytorch.linformer_pytorch import LinformerLM, Linformer, LinformerSelfAttention
+from linformer.linformer import LinformerLM, Linformer, LinformerSelfAttention

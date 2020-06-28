@@ -74,7 +74,7 @@ Self-Attention layer above receiving contextual keys
 
 ```python
 import torch
-from linformer_pytorch import LinformerSelfAttention
+from linformer import LinformerSelfAttention
 
 attn = LinformerSelfAttention(
     dim = 512,
