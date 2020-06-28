@@ -70,8 +70,7 @@ x = torch.randn(1, 4096, 512)
 attn(x) # (1, 4096, 512)
 ```
 
-Self-Attention layer above receiving contextual keys
-The contextual key sequence length must be equal to the sequence length given to the constructor
+Self-Attention layer above receiving contextual keys. The sequence length is validated on the length of the contextual keys instead of the source sequence.
 
 ```python
 import torch
