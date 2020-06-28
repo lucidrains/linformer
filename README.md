@@ -5,7 +5,7 @@ An implementation of the simple Linformer self-attention layer for Pytorch. Linf
 ## Install
 
 ```bash
-$ pip install linformer_pytorch
+$ pip install linformer
 ```
 
 ## Usage

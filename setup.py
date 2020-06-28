@@ -1,11 +1,11 @@
 from setuptools import setup, find_packages
 
 setup(
-  name = 'linformer_pytorch',
+  name = 'linformer',
   packages = find_packages(),
   version = '0.0.1',
   license='MIT',
-  description = 'Linformer',
+  description = 'Linformer implementation in Pytorch',
   author = 'Phil Wang',
   author_email = 'lucidrains@gmail.com',
   url = 'https://github.com/lucidrains/linformer-pytorch',
