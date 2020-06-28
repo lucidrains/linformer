@@ -8,7 +8,7 @@ setup(
   description = 'Linformer implementation in Pytorch',
   author = 'Phil Wang',
   author_email = 'lucidrains@gmail.com',
-  url = 'https://github.com/lucidrains/linformer-pytorch',
+  url = 'https://github.com/lucidrains/linformer',
   keywords = ['attention', 'artificial intelligence'],
   install_requires=[
       'torch'
