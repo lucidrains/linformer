@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 setup(
   name = 'linformer',
   packages = find_packages(),
-  version = '0.0.5',
+  version = '0.1.0',
   license='MIT',
   description = 'Linformer implementation in Pytorch',
   author = 'Phil Wang',

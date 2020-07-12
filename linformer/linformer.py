@@ -5,6 +5,9 @@ import torch.nn.functional as F
 
 # helper functions
 
+def default(val, default_val):
+    return val if val is not None else default_val
+
 def init_(tensor):
     dim = tensor.shape[-1]
     std = 1 / math.sqrt(dim)
@@ -41,7 +44,7 @@ class FeedForward(nn.Module):
         return self.net(x)
 
 class LinformerSelfAttention(nn.Module):
-    def __init__(self, dim, seq_len, k = 256, heads = 8, one_kv_head = False, share_kv = False, dropout = 0.):
+    def __init__(self, dim, seq_len, k = 256, heads = 8, dim_head = None, one_kv_head = False, share_kv = False, dropout = 0.):
         super().__init__()
         assert (dim % heads) == 0, 'dimension must be divisible by the number of heads'
 
@@ -49,11 +52,13 @@ class LinformerSelfAttention(nn.Module):
         self.k = k
 
         self.heads = heads
-        self.dim_head = dim // heads
 
-        self.to_q = nn.Linear(dim, dim, bias = False)
+        dim_head = default(dim_head, dim // heads)
+        self.dim_head = dim_head
 
-        kv_dim = self.dim_head if one_kv_head else dim
+        self.to_q = nn.Linear(dim, dim_head * heads, bias = False)
+
+        kv_dim = dim_head if one_kv_head else (dim_head * heads)
         self.to_k = nn.Linear(dim, kv_dim, bias = False)
         self.proj_k = nn.Parameter(init_(torch.zeros(seq_len, k)))
 
@@ -63,6 +68,7 @@ class LinformerSelfAttention(nn.Module):
             self.proj_v = nn.Parameter(init_(torch.zeros(seq_len, k)))
 
         self.dropout = nn.Dropout(dropout)
+        self.to_out = nn.Linear(dim_head * heads, dim)
 
     def forward(self, x, context = None, **kwargs):
         b, n, d, d_h, h, k = *x.shape, self.dim_head, self.heads, self.k
@@ -97,19 +103,18 @@ class LinformerSelfAttention(nn.Module):
         dots = torch.einsum('bhnd,bhkd->bhnk', queries, keys) * (d_h ** -0.5)
         attn = dots.softmax(dim=-1)
         attn = self.dropout(attn)
-        attn = torch.einsum('bhnk,bhkd->bhnd', attn, values)
+        out = torch.einsum('bhnk,bhkd->bhnd', attn, values)
 
         # split heads
-
-        attn = attn.transpose(1, 2).reshape(b, n, d)
-        return attn
+        out = out.transpose(1, 2).reshape(b, n, -1)
+        return self.to_out(out)
 
 class Linformer(nn.Module):
-    def __init__(self, dim, seq_len, depth, k = 256, heads = 8, one_kv_head = False, share_kv = False):
+    def __init__(self, dim, seq_len, depth, k = 256, heads = 8, dim_head = None, one_kv_head = False, share_kv = False):
         super().__init__()
         layers = []
         for _ in range(depth):
-            attn = LinformerSelfAttention(dim, seq_len, k = k, heads = heads, one_kv_head = one_kv_head, share_kv = share_kv)
+            attn = LinformerSelfAttention(dim, seq_len, k = k, heads = heads, dim_head = dim_head, one_kv_head = one_kv_head, share_kv = share_kv)
             ff = FeedForward(dim)
 
             attn, ff = map(lambda fn: Residual(PreNorm(dim, fn)), (attn, ff))
@@ -120,11 +125,11 @@ class Linformer(nn.Module):
         return self.net(x)
 
 class LinformerLM(nn.Module):
-    def __init__(self, num_tokens, dim, seq_len, depth, k = 256, heads = 8, one_kv_head = False, share_kv = False):
+    def __init__(self, num_tokens, dim, seq_len, depth, k = 256, heads = 8, dim_head = None, one_kv_head = False, share_kv = False):
         super().__init__()
         self.token_emb = nn.Embedding(num_tokens, dim)
         self.pos_emb = nn.Embedding(seq_len, dim)
-        self.linformer = Linformer(dim, seq_len, depth, k = k, heads = heads, one_kv_head = one_kv_head, share_kv = share_kv)
+        self.linformer = Linformer(dim, seq_len, depth, k = k, heads = heads, dim_head = dim_head, one_kv_head = one_kv_head, share_kv = share_kv)
         self.to_logits = nn.Linear(dim, num_tokens)
 
     def forward(self, x):

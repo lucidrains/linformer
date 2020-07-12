@@ -24,6 +24,7 @@ model = LinformerLM(
     seq_len = 4096,
     depth = 12,
     heads = 8,
+    dim_head = 128,        # be able to set the dimension of each head in multi-head attention
     k = 256,               # this is the k that the key/values are projected to along the sequence dimension
     one_kv_head = True,    # share one key/value head across all heads
     share_kv = False       # share the same projection for keys and values
