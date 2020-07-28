@@ -25,7 +25,8 @@ model = LinformerLM(
     dim_head = 128,        # be able to set the dimension of each head in multi-head attention
     k = 256,               # this is the k that the key/values are projected to along the sequence dimension
     one_kv_head = True,    # share one key/value head across all heads
-    share_kv = False       # share the same projection for keys and values
+    share_kv = False,      # share the same projection for keys and values
+    reversible = True      # make network reversible, like Reformer
 )
 
 x = torch.randint(0, 20000, (1, 4096))
@@ -101,5 +102,15 @@ attn(x, context) # (1, 2048, 512)
     eprint={2006.04768},
     archivePrefix={arXiv},
     primaryClass={cs.LG}
+}
+```
+
+```bibtex
+@inproceedings{kitaev2020reformer,
+    title       = {Reformer: The Efficient Transformer},
+    author      = {Nikita Kitaev and Lukasz Kaiser and Anselm Levskaya},
+    booktitle   = {International Conference on Learning Representations},
+    year        = {2020},
+    url         = {https://openreview.net/forum?id=rkgNKkHtvB}
 }
 ```

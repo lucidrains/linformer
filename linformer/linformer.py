@@ -3,6 +3,8 @@ import torch
 from torch import nn
 import torch.nn.functional as F
 
+from linformer.reversible import ReversibleSequence, SequentialSequence
+
 # helper functions
 
 def default(val, default_val):
@@ -32,16 +34,34 @@ class PreNorm(nn.Module):
         x = self.norm(x)
         return self.fn(x)
 
-class FeedForward(nn.Module):
-    def __init__(self, dim, mult = 4):
-        super().__init__()
-        self.net = nn.Sequential(
-            nn.Linear(dim, dim * mult),
-            nn.LeakyReLU(inplace = True),
-            nn.Linear(dim * mult, dim)
-        )
+class GELU_(nn.Module):
     def forward(self, x):
-        return self.net(x)
+        return 0.5 * x * (1 + torch.tanh(math.sqrt(2 / math.pi) * (x + 0.044715 * torch.pow(x, 3))))
+
+GELU = nn.GELU if hasattr(nn, 'GELU') else GELU_
+
+class FeedForward(nn.Module):
+    def __init__(self, dim, mult = 4, dropout = 0., activation = None, glu = False):
+        super().__init__()
+        activation = default(activation, GELU)
+
+        self.glu = glu
+        self.w1 = nn.Linear(dim, dim * mult * (2 if glu else 1))
+        self.act = activation()
+        self.dropout = nn.Dropout(dropout)
+        self.w2 = nn.Linear(dim * mult, dim)
+
+    def forward(self, x, **kwargs):
+        if not self.glu:
+            x = self.w1(x)
+            x = self.act(x)
+        else:
+            x, v = self.w1(x).chunk(2, dim=-1)
+            x = self.act(x) * v
+
+        x = self.dropout(x)
+        x = self.w2(x)
+        return x
 
 class LinformerSelfAttention(nn.Module):
     def __init__(self, dim, seq_len, k = 256, heads = 8, dim_head = None, one_kv_head = False, share_kv = False, dropout = 0.):
@@ -110,26 +130,30 @@ class LinformerSelfAttention(nn.Module):
         return self.to_out(out)
 
 class Linformer(nn.Module):
-    def __init__(self, dim, seq_len, depth, k = 256, heads = 8, dim_head = None, one_kv_head = False, share_kv = False):
+    def __init__(self, dim, seq_len, depth, k = 256, heads = 8, dim_head = None, one_kv_head = False, share_kv = False, reversible = False):
         super().__init__()
-        layers = []
+        layers = nn.ModuleList([])
         for _ in range(depth):
             attn = LinformerSelfAttention(dim, seq_len, k = k, heads = heads, dim_head = dim_head, one_kv_head = one_kv_head, share_kv = share_kv)
             ff = FeedForward(dim)
 
-            attn, ff = map(lambda fn: Residual(PreNorm(dim, fn)), (attn, ff))
-            layers.extend([attn, ff])
-        self.net = nn.Sequential(*layers)
+            layers.append(nn.ModuleList([
+                PreNorm(dim, attn),
+                PreNorm(dim, ff)
+            ]))
+
+        execute_type = ReversibleSequence if reversible else SequentialSequence
+        self.net = execute_type(layers)
 
     def forward(self, x):
         return self.net(x)
 
 class LinformerLM(nn.Module):
-    def __init__(self, num_tokens, dim, seq_len, depth, k = 256, heads = 8, dim_head = None, one_kv_head = False, share_kv = False):
+    def __init__(self, num_tokens, dim, seq_len, depth, k = 256, heads = 8, dim_head = None, one_kv_head = False, share_kv = False, reversible = False):
         super().__init__()
         self.token_emb = nn.Embedding(num_tokens, dim)
         self.pos_emb = nn.Embedding(seq_len, dim)
-        self.linformer = Linformer(dim, seq_len, depth, k = k, heads = heads, dim_head = dim_head, one_kv_head = one_kv_head, share_kv = share_kv)
+        self.linformer = Linformer(dim, seq_len, depth, k = k, heads = heads, dim_head = dim_head, one_kv_head = one_kv_head, share_kv = share_kv, reversible = reversible)
         self.to_logits = nn.Linear(dim, num_tokens)
 
     def forward(self, x):
