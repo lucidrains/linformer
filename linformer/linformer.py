@@ -93,7 +93,7 @@ class LinformerSelfAttention(nn.Module):
     def forward(self, x, context = None, **kwargs):
         b, n, d, d_h, h, k = *x.shape, self.dim_head, self.heads, self.k
 
-        kv_len = n if context is None else context.shape[1] 
+        kv_len = n if context is None else context.shape[1]
         assert kv_len == self.seq_len, f'the sequence length of the key / values must be {self.seq_len} - {kv_len} given'
 
         queries = self.to_q(x)
@@ -108,7 +108,7 @@ class LinformerSelfAttention(nn.Module):
         kv_projs = (self.proj_k, self.proj_v if not self.share_kv else self.proj_k)
 
         # project keys and values along the sequence length dimension to k
-        
+
         keys, values = map(proj_seq_len, zip((keys, values), kv_projs))
 
         # merge head into batch for queries and key / values
@@ -130,12 +130,12 @@ class LinformerSelfAttention(nn.Module):
         return self.to_out(out)
 
 class Linformer(nn.Module):
-    def __init__(self, dim, seq_len, depth, k = 256, heads = 8, dim_head = None, one_kv_head = False, share_kv = False, reversible = False):
+    def __init__(self, dim, seq_len, depth, k = 256, heads = 8, dim_head = None, one_kv_head = False, share_kv = False, reversible = False, dropout = 0.):
         super().__init__()
         layers = nn.ModuleList([])
         for _ in range(depth):
-            attn = LinformerSelfAttention(dim, seq_len, k = k, heads = heads, dim_head = dim_head, one_kv_head = one_kv_head, share_kv = share_kv)
-            ff = FeedForward(dim)
+            attn = LinformerSelfAttention(dim, seq_len, k = k, heads = heads, dim_head = dim_head, one_kv_head = one_kv_head, share_kv = share_kv, dropout = dropout)
+            ff = FeedForward(dim, dropout = dropout)
 
             layers.append(nn.ModuleList([
                 PreNorm(dim, attn),
