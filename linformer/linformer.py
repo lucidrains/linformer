@@ -149,11 +149,12 @@ class Linformer(nn.Module):
         return self.net(x)
 
 class LinformerLM(nn.Module):
-    def __init__(self, num_tokens, dim, seq_len, depth, k = 256, heads = 8, dim_head = None, one_kv_head = False, share_kv = False, reversible = False):
+    def __init__(self, num_tokens, dim, seq_len, depth, k = 256, heads = 8, dim_head = None, one_kv_head = False, share_kv = False, reversible = False, dropout = 0.):
         super().__init__()
         self.token_emb = nn.Embedding(num_tokens, dim)
         self.pos_emb = nn.Embedding(seq_len, dim)
-        self.linformer = Linformer(dim, seq_len, depth, k = k, heads = heads, dim_head = dim_head, one_kv_head = one_kv_head, share_kv = share_kv, reversible = reversible)
+        self.linformer = Linformer(dim, seq_len, depth, k = k, heads = heads, dim_head = dim_head,
+                one_kv_head = one_kv_head, share_kv = share_kv, reversible = reversible, dropout = dropout)
         self.to_logits = nn.Linear(dim, num_tokens)
 
     def forward(self, x):
