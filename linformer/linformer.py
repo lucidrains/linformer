@@ -94,7 +94,7 @@ class LinformerSelfAttention(nn.Module):
         b, n, d, d_h, h, k = *x.shape, self.dim_head, self.heads, self.k
 
         kv_len = n if context is None else context.shape[1]
-        assert kv_len == self.seq_len, f'the sequence length of the key / values must be {self.seq_len} - {kv_len} given'
+        assert kv_len <= self.seq_len, f'the sequence length of the key / values must be {self.seq_len} - {kv_len} given'
 
         queries = self.to_q(x)
 
@@ -106,6 +106,11 @@ class LinformerSelfAttention(nn.Module):
         values = self.to_v(kv_input) if not self.share_kv else keys
 
         kv_projs = (self.proj_k, self.proj_v if not self.share_kv else self.proj_k)
+
+        # allow for variable sequence lengths (less than maximum sequence length) by slicing projections
+
+        if kv_len < self.seq_len:
+            kv_projs = map(lambda t: t[:kv_len], kv_projs)
 
         # project keys and values along the sequence length dimension to k
 
